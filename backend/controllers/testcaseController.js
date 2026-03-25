@@ -44,6 +44,7 @@ const createTestCase = (req, res) => {
 module.exports = {
   getTestCases,
   createTestCase,
+
 const getAllTestCases = (req, res) => {
   res.status(200).json({
     success: true,
@@ -61,4 +62,5 @@ const getAllTestCases = (req, res) => {
 
 module.exports = {
   getAllTestCases,
+
 };

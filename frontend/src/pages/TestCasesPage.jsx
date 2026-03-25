@@ -1,4 +1,8 @@
+
+import { useEffect, useMemo, useState } from 'react';
+
 import { useMemo, useState } from 'react';
+
 import Table from '../components/ui/Table';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -18,20 +22,58 @@ export default function TestCasesPage({ testCases, onCreate }) {
   const [query, setQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [apiTestCases, setApiTestCases] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchTestCases = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/testcases');
+      if (!response.ok) throw new Error('Failed to fetch test cases');
+      const data = await response.json();
+      setApiTestCases(Array.isArray(data) ? data : data.data || []);
+    } catch (error) {
+      setApiTestCases(testCases);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestCases();
+  }, []);
+
+  useEffect(() => {
+    if (!apiTestCases.length && testCases.length) {
+      setApiTestCases(testCases);
+    }
+  }, [testCases, apiTestCases.length]);
+
+  const filtered = useMemo(
+    () =>
+      apiTestCases.filter((item) => `${item.id} ${item.title} ${item.module || ''}`.toLowerCase().includes(query.toLowerCase())),
+    [apiTestCases, query]
 
   const filtered = useMemo(
     () => testCases.filter((item) => `${item.id} ${item.title} ${item.module}`.toLowerCase().includes(query.toLowerCase())),
     [testCases, query]
+
   );
 
   const columns = [
     { key: 'id', label: 'Test ID', cellClassName: 'font-semibold text-blue-700' },
     { key: 'title', label: 'Title' },
+
+    { key: 'module', label: 'Module', render: (row) => row.module || 'General' },
     { key: 'module', label: 'Module' },
     { key: 'priority', label: 'Priority', render: (row) => <Badge value={row.priority} /> },
     { key: 'status', label: 'Status', render: (row) => <Badge value={row.status} /> },
   ];
-
+  const handleCreate = async () => {
+    await onCreate(form);
+    setForm(initialForm);
+    setShowModal(false);
+    fetchTestCases();
   const handleCreate = () => {
     onCreate(form);
     setForm(initialForm);
@@ -55,8 +97,14 @@ export default function TestCasesPage({ testCases, onCreate }) {
           <Button onClick={() => setShowModal(true)}>Create Test Case</Button>
         </div>
       </div>
+      <Table
+        columns={columns}
+        data={filtered}
+        emptyState={isLoading ? 'Loading test cases...' : 'No test cases matched your search.'}
+      />
 
       <Table columns={columns} data={filtered} emptyState="No test cases matched your search." />
+
 
       <Modal
         title="Create Test Case"
