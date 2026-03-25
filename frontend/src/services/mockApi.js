@@ -2,8 +2,11 @@ import { activitySeed, bugsSeed, testCasesSeed, users } from '../data/mockData';
 
 const API_BASE_URL = 'http://localhost:5000';
 const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
+export const authService = {
+  async login({ email, role }) {
+    await delay();
+    const match = users.find((user) => user.email.toLowerCase() === email.toLowerCase() && user.role === role);
 
-// AUTH
 export const authService = {
   async login({ email, role }) {
     await delay();
@@ -13,12 +16,19 @@ export const authService = {
         user.email.toLowerCase() === email.toLowerCase() &&
         user.role === role
     );
-
     return match ?? { name: `${role} User`, email, role };
   },
 };
 
-// TEST CASES
+export const testCaseService = {
+  async getAll() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/testcases`);
+      if (!response.ok) throw new Error('Failed to fetch test cases');
+      return await response.json();
+    } catch (error) {
+      console.warn('Backend unavailable. Falling back to local mock test cases.', error.message);
+
 export const testCaseService = {
   async getAll() {
     try {
@@ -28,12 +38,26 @@ export const testCaseService = {
       return await res.json();
     } catch (err) {
       console.warn('Backend unavailable → using mock test cases');
+
       return testCasesSeed;
     }
   },
 
   async create(payload) {
     try {
+
+      const response = await fetch(`${API_BASE_URL}/testcases`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to create test case');
+      return await response.json();
+    } catch (error) {
+      console.warn('Backend unavailable. Creating local mock test case.', error.message);
       const res = await fetch(`${API_BASE_URL}/testcases`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +69,6 @@ export const testCaseService = {
       return await res.json();
     } catch (err) {
       console.warn('Backend unavailable → creating local mock');
-
       return {
         id: `TC-${100 + Math.floor(Math.random() * 900)}`,
         title: payload.title,
@@ -59,6 +82,10 @@ export const testCaseService = {
     }
   },
 };
+export const dataService = {
+  async getSeedData() {
+    await delay();
+    const testCases = await testCaseService.getAll();
 
 // DATA SERVICE
 export const dataService = {
@@ -67,6 +94,7 @@ export const dataService = {
 
     const testCases = await testCaseService.getAll();
 
+
     return {
       testCases,
       bugs: bugsSeed,
@@ -74,3 +102,6 @@ export const dataService = {
     };
   },
 };
+
+};
+
