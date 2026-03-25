@@ -6,7 +6,10 @@ import TestCasesPage from './pages/TestCasesPage';
 import ExecutionPage from './pages/ExecutionPage';
 import BugsPage from './pages/BugsPage';
 import ReportsPage from './pages/ReportsPage';
+
+import { authService, dataService, testCaseService } from './services/mockApi';
 import { authService, dataService } from './services/mockApi';
+
 import { developers } from './data/mockData';
 
 export default function App() {
@@ -19,7 +22,17 @@ export default function App() {
 
   useEffect(() => {
     dataService.getSeedData().then(({ testCases, bugs, activities }) => {
+
+      const normalizedTestCases = testCases.map((item) => ({
+        ...item,
+        description: item.description || 'No description provided.',
+        steps: item.steps || 'No steps available.',
+        expectedResult: item.expectedResult || 'No expected result specified.',
+      }));
+
+      setTestCases(normalizedTestCases);
       setTestCases(testCases);
+
       setBugs(bugs);
       setActivities(activities);
     });
@@ -75,13 +88,23 @@ export default function App() {
     const loggedIn = await authService.login(payload);
     setUser(loggedIn);
   };
-
+  const createTestCase = async (form) => {
+    const created = await testCaseService.create(form);
+    const next = {
+      ...form,
+      ...created,
+      description: created.description || form.description || 'No description provided.',
+      steps: created.steps || form.steps || 'No steps available.',
+      expectedResult: created.expectedResult || form.expectedResult || 'No expected result specified.',
+      status: created.status || 'Not Executed',
+    };
   const createTestCase = (form) => {
     const next = {
       id: `TC-${100 + testCases.length + 1}`,
       ...form,
       status: 'Not Executed',
     };
+
     setTestCases((prev) => [next, ...prev]);
     setActivities((prev) => [{ id: Date.now(), text: `${next.id} created`, time: 'Just now' }, ...prev]);
   };
