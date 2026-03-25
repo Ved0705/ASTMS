@@ -1,8 +1,8 @@
-
 const testCases = [
   {
     id: 'TC-001',
     title: 'Validate login with valid credentials',
+    module: 'Authentication',
     description: 'User should be able to login with valid email and password.',
     priority: 'High',
     status: 'Not Executed',
@@ -10,6 +10,7 @@ const testCases = [
   {
     id: 'TC-002',
     title: 'Reject invalid password',
+    module: 'Authentication',
     description: 'System should show an error for incorrect password.',
     priority: 'High',
     status: 'Not Executed',
@@ -21,20 +22,21 @@ const getTestCases = (req, res) => {
 };
 
 const createTestCase = (req, res) => {
-  const { title, description, priority, status } = req.body;
+  const { title, description, priority, status, module: mod, steps, expectedResult } = req.body;
 
-  if (!title || !description || !priority || !status) {
-    return res.status(400).json({
-      message: 'title, description, priority, and status are required',
-    });
+  if (!title) {
+    return res.status(400).json({ message: 'title is required' });
   }
 
   const newTestCase = {
     id: `TC-${String(testCases.length + 1).padStart(3, '0')}`,
     title,
-    description,
-    priority,
-    status,
+    module: mod || 'General',
+    description: description || '',
+    steps: steps || '',
+    expectedResult: expectedResult || '',
+    priority: priority || 'Medium',
+    status: status || 'Not Executed',
   };
 
   testCases.push(newTestCase);
@@ -44,23 +46,4 @@ const createTestCase = (req, res) => {
 module.exports = {
   getTestCases,
   createTestCase,
-
-const getAllTestCases = (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: [
-      {
-        id: 'TC-001',
-        title: 'Sample test case',
-        module: 'Authentication',
-        priority: 'High',
-        status: 'Not Executed',
-      },
-    ],
-  });
-};
-
-module.exports = {
-  getAllTestCases,
-
 };
