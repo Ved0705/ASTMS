@@ -220,12 +220,27 @@ class TestTestCases(unittest.TestCase):
 
         # Modal closes and row appears
         self.wait.until(EC.invisibility_of_element_located(
-            (By.XPATH, "//button[contains(text(),'Save Test Case')]")
-        ))
-        row = self.wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//*[contains(text(),'Selenium Auto Test')]")
-        ))
-        self.assertIsNotNone(row)
+    (By.XPATH, "//button[contains(text(),'Save Test Case')]")
+))
+
+        # 🔥 NEW FIX STARTS HERE
+import time
+time.sleep(2)
+
+rows = self.wait.until(EC.presence_of_all_elements_located(
+    (By.CSS_SELECTOR, "table tbody tr")
+))
+
+found = False
+for row in rows:
+    if "Selenium Auto Test" in row.text:
+        found = True
+        break
+
+self.assertTrue(found)
+
+        
+        
 
     def test_11_search_filters_table(self):
         """Typing in the search box should filter the table rows."""
